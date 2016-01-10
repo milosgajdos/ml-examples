@@ -7,12 +7,12 @@ defmodule LinRegressionTest do
   end
 
   test "load training set from CSV file", %{ts_data_path: ts_data_path} do
-    ts = %LinRegression.TrainingSet{x: x} = LinRegression.load(ts_data_path)
-    assert length(ts.x) > 0
+    %LinRegression.TrainingSet{x: x, y: y} = LinRegression.load_training_set(ts_data_path)
+    assert length(x) == length(y)
   end
 
   test "Create new training set" do
-    ts = %LinRegression.TrainingSet{x: x} = [1,2] |> LinRegression.TrainingSet.new
-    assert length(ts.x) == 2
+    %LinRegression.TrainingSet{x: x, y: y} = [[[1,2]], [3]] |> LinRegression.TrainingSet.new
+    assert length(x) == 1 and length(y) == 1
   end
 end
