@@ -1,0 +1,2 @@
+defmodule LinRegression do
+end
