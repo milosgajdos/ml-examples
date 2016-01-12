@@ -1,4 +1,4 @@
-defmodule LinRegression do
+defmodule LinearRegression do
   @doc """
   load_training_set initializes linear regression training set.
   Based on the passed in parameters TrainingSet is either loaded from a 
