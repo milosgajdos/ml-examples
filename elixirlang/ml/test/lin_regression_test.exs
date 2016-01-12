@@ -13,8 +13,9 @@ defmodule LinRegressionTest do
     {x, y, _, _} = fixtures
     {_, cols} = ExMatrix.size(x)
     initial_theta = ExMatrix.new_matrix(cols, 1)
-    expected_cost = Float.to_string(32.072733877455654, [decimals: 2, compact: true]) 
-    computed_cost = Float.to_string(LinRegression.compute_cost(x, y, initial_theta))
+    expected_cost = Float.to_string(32.072733877455654, [decimals: 2]) 
+    computed_cost = Float.to_string(LinRegression.compute_cost(x, y, initial_theta), [decimals: 2])
+    assert expected_cost == computed_cost
   end
 
   test "Compute gradient descent theta and cost for a given training set", %{fixtures: fixtures} do
