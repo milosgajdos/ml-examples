@@ -3,8 +3,8 @@ defmodule TrainingSet do
 
   @doc """
   Creates new TrainingSet from input list which is a list of two list elements x and y
-  x is a list of lists and represents a features matrix
-  y is a list (vector) of feature measurements
+  x is a matrix (list of lists) which represents a features matrix
+  y is a vector (list that contains one list)  of feature measurements
   """
   def new([x, y]) do
     %TrainingSet{x: x, y: y}
@@ -31,9 +31,14 @@ defmodule TrainingSet do
     line
     |> Stream.map(&String.replace(&1, "\n", ""))
     |> Stream.map(&String.split(&1, ",", trim: true))
-    |> Stream.map(&List.foldr(&1, [],
-      fn(x, acc) ->
-        [String.to_integer(x)/1.0 | acc]
+    |> Stream.map(
+      &List.foldr(&1, [],
+        fn(x, acc) ->
+          case Float.parse(x) do
+            # TODO: need to handle :error better
+            :error -> [0.0 | acc]
+            {x_float, _} -> [x_float | acc]
+          end
       end)
     )
   end
@@ -45,29 +50,29 @@ defmodule TrainingSet do
   defp vectorize_line(line) do
     line
     |> Stream.map(
-      &List.foldr(&1, [[]], 
-        fn(row_el, [x | y]) ->
+      &List.foldr(&1, [[], []], 
+        fn(row_el, [x, y]) ->
           case length(y) do
-            # measurment vector y
-            0 -> [[], row_el]
-            # should be ok to List.flatten as y only has 1 element
-            _ -> [[row_el | x], List.flatten(y)]
+            # separate measurment y from features x
+            0 -> [[], [row_el | y]]
+            _ -> [[row_el | x], y]
           end
       end)
     )
   end
 
   @doc """
-  generate_x_y turns a list of [[[xi...],[yi]], ...] into [[x],[y]] where
-  x is a features matrix and y is a features measurement vector
+  generate_x_y turns [[[x11...],[y1]], ...] into [[[x1i], [x2i],...],[[y1], [y2],...]] where
+  xi is a vector of features in features matrix and y is a vector of features measurements
   """
   defp generate_x_y(data) do
     data
-    |> Enum.reduce([[]],
-      fn([x, y], [x_acc | y_acc]) ->
-        [y | _] = y
-        # should be ok List.flatten here as y_acc only has one element
-        [[x | x_acc], [y | List.flatten(y_acc)]]
+    |> Enum.reduce([[],[]],
+      fn([x, y], [x_acc, y_acc]) ->
+        # add a base bias to features matrix
+        x = [1.0 | x]
+        # List.flatten should be ok here as y_acc only has one element
+        [[x | x_acc], [y | y_acc]]
     end)
     |> reverse_x_y
   end
