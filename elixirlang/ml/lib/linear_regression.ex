@@ -12,50 +12,27 @@ defmodule LinearRegression do
   end
 
   @doc """
-  compute_cost implements multivariate linear regression cost function J
-  It returns a single cost value for a given x, y and theta 
+  get_model_and_cost performs a gradient descent over training data set and returns
+  a list that contains a learnt vector theta that can be used to predict future values and
+  a list of gradient descent cost of each iteration
   """
-  def compute_cost(x, y, theta) do
-    {m, _} = ExMatrix.size(y)
-    deltaX = ExMatrix.subtract(ExMatrix.multiply(x, theta), y)
-    [cost | _] = List.flatten(ExMatrix.multiply(ExMatrix.transpose(deltaX), deltaX))
-    cost/(2.0*m)
+  def get_model_and_cost(x, y, theta, alpha, iters) do
+    GradientDescent.compute_with_cost(x, y, theta, alpha, iters)
+  end
+
+  def get_model_and_cost(%TrainingSet{x: x, y: y}, theta, alpha, iters) do
+    GradientDescent.compute_with_cost(x, y, theta, alpha, iters)
   end
 
   @doc """
-  gradient_descent_with_cost performs gradient descent to learn theta parameters of 
-  Linear Regression for a given training set. It returns a list that consits of two elements: 
-  vector theta and list of cost history: [[theta1, theta2, ...], [costn, costn-1, ...]]
+  get_model performs gradient descent just like get_model_and_cost, but it does not return
+  a list of gradient descent costs, it only returns a vector of model's parameters theta
   """
-  def gradient_descent_with_cost(x, y, theta, alpha, iters) do
-    {m, _} = ExMatrix.size(y)
-    1..iters
-    |> Enum.reduce([theta, []],
-      fn(_, [theta, cost]) ->
-        theta = computeTheta(x, y, m, theta, alpha)
-        j = compute_cost(x, y, theta)
-        [theta, [j | cost]]
-    end)
+  def get_model(x, y, theta, alpha, iters) do
+    GradientDescent.compute(x, y, theta, alpha, iters)
   end
 
-  @doc """
-  gradient_descent performs gradient descent to learn theta parameters of 
-  Linear Regression for a given training set. It returns a theta vector 
-  [[theta1, theta2, ...] that can be used to predict future values.
-  """
-  def gradient_descent(x, y, theta, alpha, iters) do
-    {m, _} = ExMatrix.size(y)
-    1..iters
-    |> Enum.reduce(theta,
-      fn(_, theta) ->
-        computeTheta(x, y, m, theta, alpha)
-    end)
-  end
-
-  defp computeTheta(x, y, m, theta, alpha) do
-    deltaX = ExMatrix.subtract(ExMatrix.multiply(x, theta), y)
-    deltaJ = ExMatrix.multiply(ExMatrix.transpose(x), deltaX)
-    thetaJ = MxHelpers.per_element(deltaJ, fn(x) -> x*(alpha/m) end)
-    ExMatrix.subtract(theta, thetaJ)
+  def get_model(%TrainingSet{x: x, y: y}, theta, alpha, iters) do
+    GradientDescent.compute(x, y, theta, alpha, iters)
   end
 end

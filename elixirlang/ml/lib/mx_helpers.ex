@@ -14,4 +14,11 @@ defmodule MxHelpers do
     )
     |> Enum.to_list
   end
+
+  @doc """
+  normalize normalizes features matrix to make the gradient descent faster
+  It returns normalized features matrix
+  """
+  def normalize(x) do
+  end
 end
