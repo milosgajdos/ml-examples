@@ -42,7 +42,7 @@ defmodule GradientDescent do
   defp computeTheta(x, y, m, theta, alpha) do
     deltaX = ExMatrix.subtract(ExMatrix.multiply(x, theta), y)
     deltaJ = ExMatrix.multiply(ExMatrix.transpose(x), deltaX)
-    thetaJ = MxHelpers.per_element(deltaJ, fn(x) -> x*(alpha/m) end)
+    thetaJ = MatrixHelpers.map(deltaJ, fn(x) -> x*(alpha/m) end)
     ExMatrix.subtract(theta, thetaJ)
   end
 end

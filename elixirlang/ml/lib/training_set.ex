@@ -36,7 +36,7 @@ defmodule TrainingSet do
         fn(x, acc) ->
           case Float.parse(x) do
             # TODO: need to handle :error better
-            :error -> [0.0 | acc]
+            :error -> acc
             {x_float, _} -> [x_float | acc]
           end
       end)
@@ -53,7 +53,7 @@ defmodule TrainingSet do
       &List.foldr(&1, [[], []], 
         fn(row_el, [x, y]) ->
           case length(y) do
-            # separate measurment y from features x
+            # separate measurment y from features
             0 -> [[], [row_el | y]]
             _ -> [[row_el | x], y]
           end
@@ -71,7 +71,6 @@ defmodule TrainingSet do
       fn([x, y], [x_acc, y_acc]) ->
         # add a base bias to features matrix
         x = [1.0 | x]
-        # List.flatten should be ok here as y_acc only has one element
         [[x | x_acc], [y | y_acc]]
     end)
     |> reverse_x_y
