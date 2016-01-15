@@ -11,13 +11,13 @@ linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         # normalize the features matrix X
         if (normalize) {
                 message("Normalizing features matrix")
-                normOut <- featureNormalize(X)
+                normOut <- featureNormalize(ts$X)
                 X <- normOut$X
         } else {
                 X <- ts$X
         }
         # add intercept feature to normalized matrix
-        intercept <- matrix(rep(1, nrow(ts$X)))
+        intercept <- matrix(rep(1, nrow(X)))
         X <- cbind(intercept, X)
         y <- ts$y
         # run gradient descent to compute model parameters
