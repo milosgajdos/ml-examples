@@ -1,8 +1,8 @@
 # ML
 
-This repo will contain a collection of examples of basic Machine Learning algorithms implementations in [Elixir](http://elixir-lang.org/).
+This directory will contain a collection of examples of basic Machine Learning algorithms implementations in [Elixir](http://elixir-lang.org/).
 
-Currently iy only provides a simple [and mayb a bit naiive] [Linear Regression](https://en.wikipedia.org/wiki/Linear_regression) implementation, but hopefully if time allows I'll be adding other algorithms o/ 
+Currently it only provides a simple [and maybe a bit naiive] [Linear Regression](https://en.wikipedia.org/wiki/Linear_regression) implementation, but hopefully if time allows I'll be adding other algorithms o/ 
 
 # Linear Regression
 
