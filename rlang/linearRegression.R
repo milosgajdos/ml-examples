@@ -11,7 +11,7 @@ linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         # normalize the features matrix X
         if (normalize) {
                 message("Normalizing features matrix")
-                normOut <- featureNormalize(ts$X)
+                normOut <- featureNormalize(X)
                 X <- normOut$X
         } else {
                 X <- ts$X
