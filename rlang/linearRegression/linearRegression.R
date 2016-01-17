@@ -3,7 +3,9 @@
 # It returns computed model parameters vector
 linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         # load all supporting R scripts into R environment
-        envScripts <- c("trainingSet.R", "featureNormalize.R", "gradientDescent.R")
+        envScripts <- c("../trainingSet/trainingSet.R", 
+                        "../gradientDescent/featureNormalize.R", 
+                        "../gradientDescent/gradientDescent.R")
         invisible(sapply(envScripts, source))
         # load model training set
         message("Loading training set: ", path)

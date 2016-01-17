@@ -1,4 +1,4 @@
-# trainingSet loads training set from a CSV file in path passed in as parameter
+# trainingSet loads training set from a CSV file located in path passed in as parameter
 # It returns a list that contains features matrix X and measurement vector y
 trainingSet <- function(path) {
         # read the training set data into a data frame
