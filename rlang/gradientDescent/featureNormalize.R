@@ -3,12 +3,13 @@
 # vector sigma which contains standard deviations of each feature
 featureNormalize <- function(X) {
         # calculate mu and sigma vectors for each feature
+        # same as colMeans(x)
         mu    = apply(X, 2, mean)
         sigma = apply(X, 2, sd)
         # normalize the features matrix X
         for (i in 1:ncol(X)) {
                 X[, i] = sapply(X[, i], function(x){(x - mu[i])/sigma[i]})
         }
-        # return vectorus mu, sigma and the normalized matrix
+        # return vectors mu, sigma and normalized features matrix X
         list("mu" = mu, "sigma" = sigma, "X" = X)
 }

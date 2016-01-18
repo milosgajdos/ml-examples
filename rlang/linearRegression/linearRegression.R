@@ -1,5 +1,15 @@
+# costFunc returns gradient descent cost for given features matrix, measurement and model
+# It accepts 3 parameters as arguments:
+# X - features matrix
+# y - measurement vector
+# theta - model parameters
+costFunc <- function(X, y, theta) {
+        m = length(y)
+        t((X %*% theta) - y) %*% (((X %*% theta) - y)/(2*m))
+}
+
 # linearRegression calculates model parameters for a training set available in a path passed in
-# as an argument for a given gradient descent step and number of iterations
+# as argument for a given gradient descent step and number of iterations
 # It returns computed model parameters vector
 linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         # load all supporting R scripts into R environment
@@ -18,13 +28,13 @@ linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         } else {
                 X <- ts$X
         }
-        # add intercept feature to normalized matrix
+        # add intercept feature to features matrix
         intercept <- matrix(rep(1, nrow(X)))
         X <- cbind(intercept, X)
         y <- ts$y
         # run gradient descent to compute model parameters
         message("Running gradient descent for alpha=", alpha, " iterations=", iters)
-        theta <- rep(0, ncol(X))
-        gdOut <- gradientDescent(X, y, theta, alpha, iters)
+        init_theta <- rep(0, ncol(X))
+        gdOut <- gradientDescent(X, y, init_theta, alpha, iters, costFunc)
         gdOut$theta
 }
