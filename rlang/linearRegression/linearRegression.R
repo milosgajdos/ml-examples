@@ -12,14 +12,16 @@ costFunc <- function(X, y, theta) {
 # as argument for a given gradient descent step and number of iterations
 # It returns computed model parameters vector
 linearRegression <- function(path, alpha, iters, normalize = FALSE) {
+        # paths to supporting scripts
+        traininSetPath  <- file.path(getwd(), "..", "trainingSet", "trainingSet.R")
+        featureNormPath <- file.path(getwd(), "..", "helpers", "featureNormalize.R")
+        gradDescentPath <- file.path(getwd(), "..", "gradientDescent", "gradientDescent.R")
+        scriptPaths <- c(traininSetPath, featureNormPath, gradDescentPath)
         # load all supporting R scripts into R environment
-        envScripts <- c("../trainingSet/trainingSet.R", 
-                        "../gradientDescent/featureNormalize.R", 
-                        "../gradientDescent/gradientDescent.R")
-        invisible(sapply(envScripts, source))
+        invisible(sapply(scriptPaths, source))
         # load model training set
         message("Loading training set: ", path)
-        ts = trainingSet(path)
+        ts = loadTrainingSet(path)
         # normalize the features matrix X
         if (normalize) {
                 message("Normalizing features matrix")

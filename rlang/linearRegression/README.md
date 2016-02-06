@@ -10,12 +10,18 @@ You must have R installed on your computer. Provided scripts were tested on `R v
 - number of gradient descent iterations (positive integer)
 - normalize the training data set (boolean: TRUE or FALSE)
 
+
+Linear regression with feature normalization:
 ```
 $ Rscript computeModel.R "data/training_set_multi_data.csv" 0.3 400 TRUE
 Loading training set: data/training_set_multi_data.csv
 Normalizing features matrix
 Running gradient descent for alpha=0.3 iterations=400
 Computed model parameters: 340412.659574468, 110631.050278846, -6649.4742708198
+```
+
+Linear regression without feature normalization:
+```
 $ Rscript computeModel.R "data/training_set_uni_data.csv" 0.01 1500 FALSE
 Loading training set: data/training_set_uni_data.csv
 Running gradient descent for alpha=0.01 iterations=1500

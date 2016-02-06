@@ -13,14 +13,17 @@ There is a simple R script (`computeModel.R`) provided to demonstrate basic impl
 Example usage:
 
 With BGFS optimization (default):
+
 ```
+$ Rscript computeModel.R "data/data1.csv" FALSE
 Loading training set: data/data1.csv
 Running logistic regression optimization
 Optimal regression cost: 0.210038055121323
 Computed model parameters: -19.4945779724232, 0.164422831499694, 0.1535173797787
 ```
 
-With Nelder and Mead optimization (this ignores gradient function):
+With Nelder and Mead optimization (this ignores gradient function for some reason). This method is run by `optim` function by default if no optimization method is specified explicitly (If you want to verify this you **must modify the code** of `logisticRegression.R` script):
+
 ```
 $ Rscript computeModel.R "data/data1.csv" FALSE
 Loading training set: data/data1.csv
@@ -29,7 +32,9 @@ Computed model parameters: -25.1647048465922, 0.206252402073044, 0.2015046074812
 ```
 
 ### Regularization and feature mapping
-Apart from basic implementation of logistic regression, project also provides a possibility to compute regularized logistic regression. Project directory contains `quadrFeature.R` script which implements a simple function that can be used to add new features into the original features matrix X. The function can be passed in as a parameter to `logisticRegression` function to compute parameters of complex models. In general, any feature mapping function can be passed to `logisticRegression` function implemented in `logisticRegression.R` script, but you must also set `mapfeature` argument to `TRUE`, otherwise the feature mapping function will be ignored!
+Project also provides a possibility to compute **regularized** logistic regression. `quadrFeature.R` R script implements a simple function that can be used to add new features into the original features matrix `X`. The function can be passed in as a parameter to `logisticRegression` function to compute extra features suitable when dealing with complex models. 
+
+In general, any feature mapping function can be passed to `logisticRegression` function as a parameter, but if you decide to do so you **must** also set `mapfeature` parameter to `TRUE`; otherwise the feature mapping function will be ignored!
 
 Example usage (R environment is loaded in below example):
 
