@@ -6,7 +6,7 @@ if (!file.exists(path)) {
 }
 alpha <- as.numeric(args[2])
 if (alpha<0) {
-        stop("Alpha must be non-negative float number")
+        stop("Alpha (gradient descent step) must be non-negative float number")
 }
 iters <- as.integer(args[3])
 if (iters<0) {

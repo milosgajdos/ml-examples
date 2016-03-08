@@ -13,7 +13,7 @@ costFunc <- function(X, y, theta) {
 # It returns computed model parameters vector
 linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         # paths to supporting scripts
-        traininSetPath  <- file.path(getwd(), "..", "trainingSet", "trainingSet.R")
+        traininSetPath  <- file.path(getwd(), "..", "dataSet", "dataSet.R")
         featureNormPath <- file.path(getwd(), "..", "helpers", "featureNormalize.R")
         gradDescentPath <- file.path(getwd(), "..", "gradientDescent", "gradientDescent.R")
         scriptPaths <- c(traininSetPath, featureNormPath, gradDescentPath)
@@ -21,7 +21,7 @@ linearRegression <- function(path, alpha, iters, normalize = FALSE) {
         invisible(sapply(scriptPaths, source))
         # load model training set
         message("Loading training set: ", path)
-        ts = loadTrainingSet(path)
+        ts = loadDataSet(path)
         # normalize the features matrix X
         if (normalize) {
                 message("Normalizing features matrix")

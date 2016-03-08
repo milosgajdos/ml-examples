@@ -58,14 +58,14 @@ gradRegFunc <- function(theta, X, y, lambda) {
 logisticRegression <- function(path, regularize = FALSE, lambda = NULL,
                                mapFeature = FALSE, mapFunc = NULL) {
         # paths to supporting scripts
-        traininSetPath  <- file.path(getwd(), "..", "trainingSet", "trainingSet.R")
+        traininSetPath  <- file.path(getwd(), "..", "dataSet", "dataSet.R")
         sigmoidPath     <- file.path(getwd(), "..", "sigmoid", "sigmoid.R")
         envScripts <- c(traininSetPath, sigmoidPath)
         # load all supporting R scripts into R environment
         invisible(sapply(envScripts, source))
         # load model training set
         message("Loading training set: ", path)
-        ts = loadTrainingSet(path)
+        ts = loadDataSet(path)
         # initialize empty matrix
         X <- matrix()
         # if we want to map new features we must pass in mapFunc
