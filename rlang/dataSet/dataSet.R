@@ -27,10 +27,12 @@ loadCSVDataSet <- function(path) {
 # loadMatlabDataSet loads data set from the provided .mat Matlab file
 loadMatlabDataSet <- function(path) {
         # load R Matlab package
-        if (!require(R.matlab)){ 
+        if (suppressMessages(!require(R.matlab))) { 
+          # install R.matlab package if it can't be loaded
           install.packages("R.matlab") 
+          # load the package library
+          suppressMessages(library(R.matlab))
         }
-        library(R.matlab)
         # load .mat file from provided file
         data <- readMat(path)
         # return a list that contains features matrix X and measurment vector y
