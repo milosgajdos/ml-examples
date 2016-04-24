@@ -15,7 +15,7 @@ Example usage:
 With BGFS optimization (default):
 
 ```
-$ Rscript computeModel.R "data/data1.csv" FALSE
+$ Rscript computeModel.R "data/data1.csv" "csv" FALSE FALSE
 Loading training set: data/data1.csv
 Running logistic regression optimization
 Optimal regression cost: 0.210038055121323
@@ -25,7 +25,7 @@ Computed model parameters: -19.4945779724232, 0.164422831499694, 0.1535173797787
 With Nelder and Mead optimization (this ignores gradient function for some reason). This method is run by `optim` function by default if no optimization method is specified explicitly (If you want to verify this you **must modify the code** of `logisticRegression.R` script):
 
 ```
-$ Rscript computeModel.R "data/data1.csv" FALSE
+$ Rscript computeModel.R "data/data1.csv" FALSE FALSE
 Loading training set: data/data1.csv
 Running logistic regression optimization
 Computed model parameters: -25.1647048465922, 0.206252402073044, 0.201504607481281
@@ -42,8 +42,7 @@ Example usage (R environment is loaded in below example):
 > list.files()
 > [1] "computeModel.R"       "data"                 "logisticRegression.R"
 > [4] "quadrFeature.R"       "README.md"
-> source("logisticRegression.R")
-> source("quadrFeature.R")
+> invisible(sapply(c("logisticRegression.R", "quadrFeature.R"), source))
 > logisticRegression("data/data2.csv", regularize=TRUE, lambda=1, mapFeature=TRUE, mapFunc=quadrFeature)
 Loading training set: data/data2.csv
 Running regularized logistic regression optimization for lambda: 1

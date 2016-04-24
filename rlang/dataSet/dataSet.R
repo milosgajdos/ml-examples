@@ -1,18 +1,22 @@
 # loadDataSet loads data set from a file located in path provided as parameter.
 # By default loadDataSet treats the file in the provided path as CSV file. 
-# You can also specify "matlab" type which will read in .mat Matlab file.
+# You can specify "matlab type which will read in .mat Matlab file.
+# There is a support of "png" type which allows to read in PNG image.
 # loadDataSet returns a list which contains features matrix X and 
-# measurement vector y.
+# measurement vector y, given that particular data sets are formatted 
+# appropriately. When PNG file is loaded in, loadDataSet returns 3 dimensional
+# matrix representing RGB layers.
 loadDataSet <- function(path, type = "csv") {
         # load the training set from a provided file
         switch(type, 
-               "csv"    = loadCSVDataSet(path),
-               "matlab" = loadMatlabDataSet(path)
+               "csv"    = loadCSV(path),
+               "matlab" = loadMatlab(path),
+               "png"    = loadPNG(path)
                )
 }
 
-# loadCSVDataSet loads data set from the provided CSV file
-loadCSVDataSet <- function(path) {
+# loadCSV loads data set from the CSV file located in supplied path
+loadCSV <- function(path) {
         # load CSV file from the filesystem into data frame
         df <- read.table(path, sep=",", stringsAsFactors = FALSE)
         # transform training set data frame into matrix
@@ -24,8 +28,8 @@ loadCSVDataSet <- function(path) {
         list("X" = X, "y" = y)
 }
 
-# loadMatlabDataSet loads data set from the provided .mat Matlab file
-loadMatlabDataSet <- function(path) {
+# loadMatlab loads data set from the provided .mat Matlab file in supplied path
+loadMatlab <- function(path) {
         # load R Matlab package
         if (suppressMessages(!require(R.matlab))) { 
           # install R.matlab package if it can't be loaded
@@ -37,4 +41,19 @@ loadMatlabDataSet <- function(path) {
         data <- readMat(path)
         # return a list that contains features matrix X and measurment vector y
         list("X" = data$X, "y" = data$y)
+}
+
+# laodPNG reads PNG image from the provided path
+laodPNG <- function(path) {
+        # load ong package
+        if (suppressMessages(!require(png))) {
+                # install R.matlab package if it can't be loaded
+                install.packages("png") 
+                # load the package library
+                suppressMessages(library(png))
+        }
+        # load the PNG file
+        img <- readPNG(path)
+        # return a list that contains the image file in 3-dimensonal "matrix" X
+        list("X" = img, "y"= NULL)
 }
