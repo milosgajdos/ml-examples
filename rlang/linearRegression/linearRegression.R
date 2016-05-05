@@ -1,44 +1,42 @@
 # linearRegression calculates model parameters for a training set available in a path passed in
 # as argument for a given gradient descent step and number of iterations
-# It returns computed model parameters vector
-linearRegression <- function(path, dataType = "csv", normalize = FALSE, 
-                             alpha, iters) {
-        # paths to supporting scripts
-        traininSetPath  <- file.path(getwd(), "..", "dataSet", "dataSet.R")
-        featureNormPath <- file.path(getwd(), "..", "helpers", "featureNormalize.R")
-        gradDescentPath <- file.path(getwd(), "..", "gradientDescent", "gradientDescent.R")
-        scriptPaths <- c(traininSetPath, featureNormPath, gradDescentPath)
-        # load all supporting R scripts into R environment
-        invisible(sapply(scriptPaths, source))
+# linearRegression returns a vector containing model parameters
+# it accepts several parameters:
+# trainDataPath - path to a training data set
+# dataType      - type of the training data set file
+# normalize     - boolean to request feature normalizing
+# costFunc      - linear regression cost function
+# alpha         - gradient descent step
+# iters         = number of gradient descent iterations
+linearRegression <- function(trainDataPath, dataType = "csv", normalize = FALSE, 
+                             costFunc = NULL, alpha, iters) {
+        # load all supporting library scripts into R environment
+        libPath <- file.path(getwd(), "..", "libs")
+        invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load model training set
-        message("Loading training set: ", path)
-        ts = loadDataSet(path, dataType)
-        # normalize the features matrix X
-        if (normalize) {
-                message("Normalizing features matrix")
-                # we could also use scal(0 function here
-                normOut <- featureNormalize(ts$X)
-                X <- normOut$X
-        } else {
-                X <- ts$X
-        }
-        # add intercept feature to features matrix
-        intercept <- matrix(rep(1, nrow(X)))
-        X <- cbind(intercept, X)
+        message("Loading training set: ", trainDataPath)
+        ts <- loadDataSet(trainDataPath, dataType)
+        # preprocess features matrix
+        X <- prepData(ts$X, normalize)
         y <- ts$y
+        # load gradient descent library script
+        gradDescentPath <- file.path(getwd(), "..", "gradientDescent", "gradientDescent.R")
+        invisible(source(gradDescentPath))
         # run gradient descent to compute model parameters
         message("Running gradient descent for alpha=", alpha, " iterations=", iters)
-        initTheta <- rep(0, ncol(X))
-        gdOut <- gradientDescent(X, y, initTheta, alpha, iters, costFunc)
+        # initialize theta to zero vector
+        theta <- rep(0, ncol(X))
+        # run gradient descent
+        gdOut <- gradientDescent(X, y, theta, alpha, iters, costFunc)
         gdOut$theta
 }
 
-# costFunc returns gradient descent cost for given features matrix, measurement and model
+# linRegCostFunc returns gradient descent cost for given features matrix, measurement and model
 # It accepts 3 parameters as arguments:
 # X - features matrix
 # y - measurement vector
 # theta - model parameters
-costFunc <- function(X, y, theta) {
+linRegCostFunc <- function(X, y, theta) {
         m = length(y)
         t((X %*% theta) - y) %*% (((X %*% theta) - y)/(2*m))
 }

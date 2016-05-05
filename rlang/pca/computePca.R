@@ -1,8 +1,8 @@
 # read cli params
 args <- commandArgs(trailingOnly = TRUE)
-path <- args[1]
-if (!file.exists(path)) {
-        stop("File ", path, " does not exist!")
+dataPath <- args[1]
+if (!file.exists(dataPath)) {
+        stop("File ", dataPath, " does not exist!")
 }
 
 dataType <- args[2]
@@ -23,5 +23,5 @@ if (is.na(pcRet)) {
 # compute principal components
 scriptPath <- file.path(getwd(), "pca.R")
 source(scriptPath)
-pcs <- pca(path, dataType, normalize, pcRet)
+pcs <- pca(dataPath, dataType, normalize, pcRet)
 message("Computed principal components: ", paste(pcs, sep=", ", collapse=", ") )

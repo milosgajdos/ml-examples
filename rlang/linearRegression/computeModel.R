@@ -1,9 +1,9 @@
 # read cli params
 args <- commandArgs(trailingOnly = TRUE)
-# file path
-path <- args[1]
-if (!file.exists(path)) {
-        stop("File ", path, " does not exist!")
+# path to training data set
+trainDataPath <- args[1]
+if (!file.exists(trainDataPath)) {
+        stop("File ", trainDataPath, " does not exist!")
 }
 # data type
 dataType <- args[2]
@@ -25,5 +25,5 @@ if (iters<0) {
 # compute model parameters
 scriptPath <- file.path(getwd(), "linearRegression.R")
 source(scriptPath)
-model <- linearRegression(path, dataType, normalize, alpha, iters)
+model <- linearRegression(trainDataPath, dataType, normalize, linRegCostFunc, alpha, iters)
 message("Computed model parameters: ", paste(model, sep=", ", collapse=", "))

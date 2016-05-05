@@ -43,8 +43,8 @@ loadMatlab <- function(path) {
         list("X" = data$X, "y" = data$y)
 }
 
-# laodPNG reads PNG image from the provided path
-laodPNG <- function(path) {
+# loadPNG reads PNG image from the provided path
+loadPNG <- function(path) {
         # load ong package
         if (suppressMessages(!require(png))) {
                 # install R.matlab package if it can't be loaded
@@ -56,4 +56,22 @@ laodPNG <- function(path) {
         img <- readPNG(path)
         # return a list that contains the image file in 3-dimensonal "matrix" X
         list("X" = img, "y"= NULL)
+}
+
+# prepData pre-processes training set. It can perform normalization
+# or feature mapping if feature mapping function is supplied as parameter
+prepData <- function(X, normalize = FALSE, mapFunc = NULL){
+        # if mapFunc is supplied we will perform feature mapping
+        if (!is.null(mapFunc) && is.function(mapFunc)) {
+                X <- mapFunc(X)
+        }
+        # normalize the features matrix X
+        if (normalize) {
+                X <- scale(X, center = TRUE, scale = TRUE)
+        }
+        # add bias "feature" to features matrix
+        bias <- matrix(rep(1, nrow(X)))
+        X <- cbind(bias, X)
+        # return features matrix
+        return(X)
 }

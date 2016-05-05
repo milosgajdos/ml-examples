@@ -1,6 +1,6 @@
 # Logistic Regression
 
-[Logistic regression](https://en.wikipedia.org/wiki/Logistic_regression) is implemented in `logisticRegression.R` R script. The script calculates optimized model parameters by calling R's `optim()` function.Currently, the script uses `BFGS` optimization method. There is also a few other R scripts provided which are loaded by `logisticRegression.R` automatically when it runs. These scripts can also be used separately.
+[Logistic regression](https://en.wikipedia.org/wiki/Logistic_regression) is implemented in `logisticRegression.R` R script. The script calculates optimized model parameters by calling R's `optim()` function.Currently, the script uses `BFGS` optimization method.
 
 ## Usage
 
@@ -15,35 +15,36 @@ Example usage:
 With BGFS optimization (default):
 
 ```
-$ Rscript computeModel.R "data/data1.csv" "csv" FALSE FALSE
+$ Rscript computeModel.R "data/data1.csv" "csv" FALSE
 Loading training set: data/data1.csv
 Running logistic regression optimization
 Optimal regression cost: 0.210038055121323
 Computed model parameters: -19.4945779724232, 0.164422831499694, 0.1535173797787
 ```
 
-With Nelder and Mead optimization (this ignores gradient function for some reason). This method is run by `optim` function by default if no optimization method is specified explicitly (If you want to verify this you **must modify the code** of `logisticRegression.R` script):
+With Nelder and Mead optimization (this ignores gradient function for some reason). This method is run by `optim` function by default if no optimization method is specified explicitly (**If you want to verify this you must modify the code** of `logisticRegression.R` **script and remove explicit method parameter**):
 
 ```
-$ Rscript computeModel.R "data/data1.csv" FALSE FALSE
+$ Rscript computeModel.R "data/data1.csv" "csv" FALSE
 Loading training set: data/data1.csv
 Running logistic regression optimization
 Computed model parameters: -25.1647048465922, 0.206252402073044, 0.201504607481281
 ```
 
 ### Regularization and feature mapping
-Project also provides a possibility to compute **regularized** logistic regression. `quadrFeature.R` R script implements a simple function that can be used to add new features into the original features matrix `X`. The function can be passed in as a parameter to `logisticRegression` function to compute extra features suitable when dealing with complex models. 
+Project also provides a possibility to compute **regularized** logistic regression. If you wish to regularize the regression with some parameter `lambda`, you must supply it as an argument/parameter.
 
-In general, any feature mapping function can be passed to `logisticRegression` function as a parameter, but if you decide to do so you **must** also set `mapfeature` parameter to `TRUE`; otherwise the feature mapping function will be ignored!
+You can also perform feature mapping to simulate more complex model. You can see an example of this in `quadrFeature.R` R script which implements a simple function that can be used to add new features into the original features matrix `X`. The function can be passed in as a parameter to `logisticRegression` function to compute extra features suitable when dealing with complex models. Any feature mapping function can be passed to `logisticRegression` function as a parameter.
 
 Example usage (R environment is loaded in below example):
+**Note that we have to specify particular cost and gradient step functions!**
 
 ```
 > list.files()
 > [1] "computeModel.R"       "data"                 "logisticRegression.R"
 > [4] "quadrFeature.R"       "README.md"
 > invisible(sapply(c("logisticRegression.R", "quadrFeature.R"), source))
-> logisticRegression("data/data2.csv", regularize=TRUE, lambda=1, mapFeature=TRUE, mapFunc=quadrFeature)
+> logisticRegression("data/data2.csv", lambda=1, costFunc=lrCostRegFunc, gradFunc=lrGradRegFunc, mapFunc=quadrFeature)
 Loading training set: data/data2.csv
 Running regularized logistic regression optimization for lambda: 1
 Optimal regression cost: 0.529002742805693

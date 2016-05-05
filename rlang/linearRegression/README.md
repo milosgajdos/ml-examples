@@ -1,14 +1,16 @@
 # Linear Regression
 
-Linear regression is implemented in `linearRegression.R` R script. The script automatically normalizes training set supplied as a parameter to speed up the [Gradient Descent](https://en.wikipedia.org/wiki/Gradient_descent). There is a few helper R scripts provided which are loaded by `linearRegression.R` when it runs and which can be used separately.
+Linear regression is implemented in `linearRegression.R` R script. The script allows to normalize training set supplied as a parameter to speed up the [Gradient Descent](https://en.wikipedia.org/wiki/Gradient_descent). 
 
-## Usage
+## Example Usage
 
-You must have R installed on your computer. Provided scripts were tested on `R version 3.2.2 (2015-08-14) -- "Fire Safety"`. Parameters passed to `computeModel.R` scriptre as follows:
+You must have R installed on your computer. This project's R scripts were tested on `R version 3.2.2 (2015-08-14)-- "Fire Safety"`. 
+
+You can pass the following parameters `computeModel.R` script:
 
 - path to a training set file
 - data type: csv, matlab, png
-- normalize the training data set (boolean: TRUE or FALSE)
+- normalize (scale the features) the training data set (boolean: TRUE or FALSE)
 - gradient descent step alpha (non-negative float)
 - number of gradient descent iterations (positive integer)
 
