@@ -23,7 +23,7 @@ if (iters<0) {
         stop("Number of iterations must be a positive integer: ", iters)
 }
 # compute model parameters
-scriptPath <- file.path(getwd(), "linearRegression.R")
+scriptPath <- file.path(".", "linearRegression.R")
 source(scriptPath)
 model <- linearRegression(trainDataPath, dataType, normalize, linRegCostFunc, alpha, iters)
 message("Computed model parameters: ", paste(model, sep=", ", collapse=", "))

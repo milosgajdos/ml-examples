@@ -5,3 +5,10 @@
 sigmoid <- function(z) {
         1/(1+exp(-z))
 }
+
+# sigmoidGrad implements sigmoid gradient function
+# This is essentially a derivative of sigmoid according to z
+sigmoidGrad <- function(z) {
+        # return gradient
+        sigmoid(z)*(1-sigmoid(z))
+}

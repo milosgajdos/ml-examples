@@ -21,7 +21,7 @@ if (is.na(pcRet)) {
 }
 
 # compute principal components
-scriptPath <- file.path(getwd(), "pca.R")
+scriptPath <- file.path(".", "pca.R")
 source(scriptPath)
 pcs <- pca(dataPath, dataType, normalize, pcRet)
 message("Computed principal components: ", paste(pcs, sep=", ", collapse=", ") )

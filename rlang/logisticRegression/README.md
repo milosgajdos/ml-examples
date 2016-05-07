@@ -7,8 +7,8 @@
 You must have R installed on your computer. Provided scripts were tested on `R version 3.2.2 (2015-08-14) -- "Fire Safety"`. 
 There is a simple R script (`computeModel.R`) provided to demonstrate basic implementation features. The script accepts following cli parameters:
 - path to a training set CSV file
-- regularization - TRUE/FALSE
-    - if regularization is set to TRUE, lambda parameter is required
+- type of training set file
+- normalize - set to TRUE of feature normalization/scaling is required
 
 Example usage:
 

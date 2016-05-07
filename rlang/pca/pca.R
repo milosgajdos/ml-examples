@@ -8,11 +8,11 @@
 # pcRet     - non negative integer that specify the number of PCA components to be returned
 pca <- function(dataPath, dataType = "matlab", normalize = FALSE, pcRet = NA) {
         # load all supporting library scripts into R environment
-        libPath <- file.path(getwd(), "..", "libs")
+        libPath <- file.path("..", "libs")
         invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load data set
         message("Loading data set: ", dataPath)
-        dataSet <- loadDataSet(dataPath, dataType)
+        dataSet <- loadTrainingSet(dataPath, dataType)
         X <- as.matrix(dataSet$X)
         # mean center and normalize
         X <- scale(X, scale=normalize)

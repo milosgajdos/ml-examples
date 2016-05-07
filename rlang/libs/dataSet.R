@@ -1,12 +1,12 @@
-# loadDataSet loads data set from a file located in path provided as parameter.
-# By default loadDataSet treats the file in the provided path as CSV file. 
+# loadTrainingSet loads data set from a file located in path provided as parameter.
+# By default loadTrainingSet treats the file in the provided path as CSV file. 
 # You can specify "matlab type which will read in .mat Matlab file.
 # There is a support of "png" type which allows to read in PNG image.
-# loadDataSet returns a list which contains features matrix X and 
+# loadTrainingSet returns a list which contains features matrix X and 
 # measurement vector y, given that particular data sets are formatted 
-# appropriately. When PNG file is loaded in, loadDataSet returns 3 dimensional
+# appropriately. When PNG file is loaded in, loadTrainingSet returns 3 dimensional
 # matrix representing RGB layers.
-loadDataSet <- function(path, type = "csv") {
+loadTrainingSet <- function(path, type = "csv") {
         # load the training set from a provided file
         switch(type, 
                "csv"    = loadCSV(path),
@@ -47,7 +47,7 @@ loadMatlab <- function(path) {
 loadPNG <- function(path) {
         # load ong package
         if (suppressMessages(!require(png))) {
-                # install R.matlab package if it can't be loaded
+                # install PNG package if it can't be loaded
                 install.packages("png") 
                 # load the package library
                 suppressMessages(library(png))
@@ -60,7 +60,8 @@ loadPNG <- function(path) {
 
 # prepData pre-processes training set. It can perform normalization
 # or feature mapping if feature mapping function is supplied as parameter
-prepData <- function(X, normalize = FALSE, mapFunc = NULL){
+# It can also add a bias unit to your data matrix if requested
+prepData <- function(X, normalize = FALSE, mapFunc = NULL, addBias = FALSE){
         # if mapFunc is supplied we will perform feature mapping
         if (!is.null(mapFunc) && is.function(mapFunc)) {
                 X <- mapFunc(X)
@@ -69,9 +70,11 @@ prepData <- function(X, normalize = FALSE, mapFunc = NULL){
         if (normalize) {
                 X <- scale(X, center = TRUE, scale = TRUE)
         }
-        # add bias "feature" to features matrix
-        bias <- matrix(rep(1, nrow(X)))
-        X <- cbind(bias, X)
+        # add bias if requested
+        if (addBias) {
+                bias <- matrix(rep(1, nrow(X)))
+                X <- cbind(bias, X)
+        }
         # return features matrix
         return(X)
 }

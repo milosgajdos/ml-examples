@@ -14,7 +14,7 @@ normalize <- as.logical(args[3])
 # do we want to regularize the regression?
 lambda <- as.numeric(args[4])
 # load logisticRegression R script
-scriptPath <- file.path(getwd(), "logisticRegression.R")
+scriptPath <- file.path(".", "logisticRegression.R")
 source(scriptPath)
 if (is.na(lambda)) {
         costFunc <- lrCostFunc

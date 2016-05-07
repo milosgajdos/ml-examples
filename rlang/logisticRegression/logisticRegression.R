@@ -4,23 +4,23 @@
 # logisticRegression returns a vector containing model parameters
 # It accepts several parameters:
 # trainDataPath - path to a training data set
-# dataType      - type of the training data set file
-# normalize     - boolean to request feature normalizing
-# lambda        - regularization parameter. Default value is 1.0
-# costFunc      - gradient descent cost function
-# gradFunc      - gradient descent step function
-# mapFunc       - feature mapping function
+# dataType      - type of the training data set file. Default: csv
+# normalize     - boolean to request feature normalizing. Default: FALSE
+# lambda        - regularization parameter. Default: NA
+# costFunc      - gradient descent cost function. Default: NULL
+# gradFunc      - gradient descent step function. Default: NULL
+# mapFunc       - feature mapping function, Default: NULL
 logisticRegression <- function(trainDataPath, dataType = "csv", normalize = FALSE,
-                               lambda = NULL, costFunc = NULL, gradFunc = NULL, 
+                               lambda = NA, costFunc = NULL, gradFunc = NULL, 
                                mapFunc = NULL) {
         # load all supporting library scripts into R environment
-        libPath <- file.path(getwd(), "..", "libs")
+        libPath <- file.path("..", "libs")
         invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load model training set
         message("Loading training set: ", trainDataPath)
-        ts = loadDataSet(trainDataPath, dataType)
+        ts <- loadTrainingSet(trainDataPath, dataType)
         # preprocess features matrix
-        X <- prepData(ts$X, normalize, mapFunc)
+        X <- prepData(ts$X, normalize, mapFunc, addBias = TRUE)
         y <- ts$y
         # initialize theta to zero vector
         theta <- rep(0, ncol(X))

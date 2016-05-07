@@ -11,16 +11,16 @@
 linearRegression <- function(trainDataPath, dataType = "csv", normalize = FALSE, 
                              costFunc = NULL, alpha, iters) {
         # load all supporting library scripts into R environment
-        libPath <- file.path(getwd(), "..", "libs")
+        libPath <- file.path("..", "libs")
         invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load model training set
         message("Loading training set: ", trainDataPath)
-        ts <- loadDataSet(trainDataPath, dataType)
+        ts <- loadTrainingSet(trainDataPath, dataType)
         # preprocess features matrix
-        X <- prepData(ts$X, normalize)
+        X <- prepData(ts$X, normalize, addBias = TRUE)
         y <- ts$y
         # load gradient descent library script
-        gradDescentPath <- file.path(getwd(), "..", "gradientDescent", "gradientDescent.R")
+        gradDescentPath <- file.path("..", "gradientDescent", "gradientDescent.R")
         invisible(source(gradDescentPath))
         # run gradient descent to compute model parameters
         message("Running gradient descent for alpha=", alpha, " iterations=", iters)
