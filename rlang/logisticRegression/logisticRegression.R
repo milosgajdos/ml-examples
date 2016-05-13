@@ -1,5 +1,5 @@
-# logisticRegression calculates model parameters for a training set available in a path 
-# passed in as argument. It calls R's optim() function from optimization library which 
+# logisticRegression calculates model parameters for a training set available in a path
+# passed in as argument. It calls R's optim() function from optimization library which
 # optimizes required model for a given cost and gradient passed in as parameters
 # logisticRegression returns a vector containing model parameters
 # It accepts several parameters:
@@ -11,14 +11,14 @@
 # gradFunc      - gradient descent step function. Default: NULL
 # mapFunc       - feature mapping function, Default: NULL
 logisticRegression <- function(trainDataPath, dataType = "csv", normalize = FALSE,
-                               lambda = NA, costFunc = NULL, gradFunc = NULL, 
+                               lambda = NA, costFunc = NULL, gradFunc = NULL,
                                mapFunc = NULL) {
         # load all supporting library scripts into R environment
         libPath <- file.path("..", "libs")
         invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load model training set
         message("Loading training set: ", trainDataPath)
-        ts <- loadTrainingSet(trainDataPath, dataType)
+        ts <- loadTrainingSet(trainDataPath, dataType, supervised = TRUE)
         # preprocess features matrix
         X <- prepData(ts$X, normalize, mapFunc, addBias = TRUE)
         y <- ts$y

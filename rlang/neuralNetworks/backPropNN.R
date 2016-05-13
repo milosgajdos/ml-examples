@@ -1,5 +1,5 @@
 # backPropNN implements backpropagation Neural Network algorithm
-# it returns the resulting network parameters in a list
+# it returns the resulting network parameters in a list. It accepts following parameters:
 # trainDataPath - path to training data set
 # dataType      - type of the data set file(s). Default; csv
 # normalize     - do you need to perform feature scaling? Default: FALSE
@@ -10,12 +10,12 @@ backPropNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, lambd
         invisible(sapply(list.files(path=libPath, full.names = TRUE), source))
         # load NN training set
         message("Loading training set: ", trainDataPath)
-        ts <- loadTrainingSet(trainDataPath, dataType)
+        ts <- loadTrainingSet(trainDataPath, dataType, supervised = TRUE)
         message("Done!")
         # preprocess features matrix if requested
         X <- prepData(ts$X, normalize)
         y <- ts$y
-        # Neural Network parameters: 
+        # Neural Network parameters:
         #       2 layers 400 inputs, 10 outputs/labels
         inputLayerSize  <- 400
         hiddenLayerSize <- 25
@@ -28,13 +28,13 @@ backPropNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, lambd
         # calculat Neural Net parameters
         message("Computing BFGS optimized NN parameters with ", nrIters, " iterations")
         model <- optim(theta, costFunc, gradFunc, X=X, y=y, lambda=lambda, method="BFGS",
-                       inputLayerSize=inputLayerSize, hiddenLayerSize=hiddenLayerSize, 
+                       inputLayerSize=inputLayerSize, hiddenLayerSize=hiddenLayerSize,
                        nrLabels=nrLabels, control = list(maxit = nrIters, trace = 1))
         message("Done computing NN parameter!")
         nnParams <- model$par
         # roll in the computed parameters to NNet matrices
         theta1 <- matrix(nnParams[1:(hiddenLayerSize*(inputLayerSize+1))], nrow=hiddenLayerSize)
-        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)], 
+        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)],
                          nrow=nrLabels)
         list("theta1" = theta1, "theta2" = theta2)
 }
@@ -51,7 +51,7 @@ backPropNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, lambd
 costFunc <- function(nnParams, inputLayerSize, hiddenLayerSize, nrLabels, X, y, lambda){
         #message("Calculating NN cost")
         theta1 <- matrix(nnParams[1:(hiddenLayerSize*(inputLayerSize+1))], nrow=hiddenLayerSize)
-        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)], 
+        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)],
                          nrow=nrLabels)
         # Add bias to X
         X <- cbind(matrix(rep(1, nrow(X))), X)
@@ -67,7 +67,7 @@ costFunc <- function(nnParams, inputLayerSize, hiddenLayerSize, nrLabels, X, y, 
         m <- length(y)
         J <- -(sum(sum((yk * log(a3) + (1 - yk) * log(1 - a3)), 2)))/m;
         if (!is.na(lambda)) {
-                reg <- (lambda/(2*m))*(sum(sum(theta1[,2:ncol(theta1)]^2)) + 
+                reg <- (lambda/(2*m))*(sum(sum(theta1[,2:ncol(theta1)]^2)) +
                                        sum(sum(theta2[,2:ncol(theta2)]^2)))
                 J <- J + reg
         }
@@ -81,7 +81,7 @@ gradFunc <- function(nnParams, inputLayerSize, hiddenLayerSize, nrLabels, X, y, 
         #message("Calculating NN gradient")
         # unroll NN layer matrices
         theta1 <- matrix(nnParams[1:(hiddenLayerSize*(inputLayerSize+1))], nrow=hiddenLayerSize)
-        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)], 
+        theta2 <- matrix(nnParams[(hiddenLayerSize*(inputLayerSize+1)+1):length(nnParams)],
                          nrow=nrLabels)
         # Add bias to X
         X <- cbind(matrix(rep(1, nrow(X))), X)
