@@ -84,7 +84,6 @@ getGridSize <- function(X, mapUnits = NA, lattice = "hexagon"){
         if (is.na(mapUnits)){
                 # this is a simple heuristic
                 mapUnits <- ceiling(5 * dataLen^0.5)
-                message(mapUnits)
         }
         # single dimensional input data - we get 1D SOM map
         if (dataDim == 1) {
@@ -247,8 +246,11 @@ neighbFunc <- function(){
 # lattice - type of SOM grid; hexagon/rectangle. Default: hexagon
 # shape   - shape of the grid. Only sheet is currently supported. Default: sheet
 getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
-        if (shape != "sheet" || !(lattice %in% c("hexagon", "rectangle"))) {
-                    stop("Unsupported lattice or shape ", lattice, " ", shape)
+        if (shape != "sheet"){
+                stop("Unsupported shape ", shape)
+        }
+        if(!(lattice %in% c("hexagon", "rectangle"))) {
+            stop("Unsupported lattice or shape ", lattice, " ", shape)
         }
         if (length(gridSize) == 1){
                  gridSize <- c(gridSize, 1)
@@ -266,9 +268,9 @@ getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
         coordMap <- matrix(rep(0, mapUnits*mapDim), mapUnits, mapDim)
         # first dimension contains continuous repeated sequence: 0,1,2, 0,1,2. etc.
         coordMap[,1] <- rep(seq(0, gridSize[1]-1), mapUnits/gridSize[1])
-        # all other dimensions contain repeated groupq of sequences: 0,0,0 ... 1,1,1 ...
+        # all other dimensions contain repeated sequence groups: 0,0,0 ... 1,1,1 ...
         for (i in 2:mapDim){
-                # how long should the repetitions be
+                # how long should the groups be
                 reps <- mapUnits/gridSize[i]
                 coordMap[,i] <- rep(0:(gridSize[i]-1), each = reps)
         }
@@ -281,10 +283,17 @@ getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
                 if (mapDim >2) {
                         stop("Using hexagon in more than 2 dimensions not allowed!")
                 }
-                # sequence of every other index: 1, 3, 5, etc.
-                xOffsetInd <- seq(1, by = 2, len = floor(mapUnits/2))
-                # move x coordinates by 0.5
-                coordMap[xOffsetInd, 1] = coordMap[xOffsetInd, 1] + 0.5
+                # sequence of every other index: 2, 4, 6, per each row
+                # ie. if we have 2 rows with 10 mapUnits, we need the following seqs:
+                # 0,2,4 and 7,9.
+                nrSeqs <- mapUnits/gridSize[1]
+                for (i in 1:nrSeqs){
+                        # in case of 5x2 grid this will generate the following (per row) sequences:
+                        # 2,4 and 6,8 - remember we need one sequence per each "model units y-dim row"
+                        xOffsetInd <- seq(2+(i-1)*gridSize[1], by = 2, len = mapUnits/gridSize[1])
+                        # move x coordinates by 0.5
+                        coordMap[xOffsetInd, 1] = coordMap[xOffsetInd, 1] + 0.5
+                }
         }
         if (shape == "sheet") {
                 if (lattice == "hexagon") {
@@ -301,19 +310,11 @@ getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
 # coordMap - map of SOM groid units coordinates
 # shape - SOM grid shape. Currently only shet is supported. Default: sheet
 getUnitDistances <- function(coordMap, shape = "sheet"){
-        if (shappe != "sheet") {
+        if (shape != "sheet") {
                 stop("Unsupported SOM shape ", shape)
         }
+        # number of SOM model units
         mapUnits <- nrow(coordMap)
-        # initialize empty matrix
-        distMap <- matrix(rep(0, mapUnits*mapUnits), mapUnits, mapUnits)
-        for (i in 1:(mapUnits-1)) {
-                indSeq <- seq((i+1), mapUnits)
-                # distance coordinates
-                distCoords <- (coordMap[indSeq,] - coordMap[rep(1, mapUnits-i)*i,])
-                # calculate the distance between each unit
-                distMap[i, indSeq] <- sqrt(sum(distCoords^2))
-        }
-        # make the map symmetric
-        distMap+t(distMap)
+        # euclidean distance between each unit in coordinates Matrix
+        as.matrix(dist(getUnitCoords(getGridSize(X)), diag = TRUE, upper = TRUE))
 }
