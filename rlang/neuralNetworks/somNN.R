@@ -31,17 +31,24 @@ somNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, somInitTyp
         message("Done!")
         # init map weights
         message("Initializing SOM using ", somInitType, "init type")
-        somWeights <- somInit(X, somTop$munits, somInitType)
+        initSom <- somInit(X, somTop$munits, somInitType)
         message("Done!")
         # base training a.k.a. SOM ordering phase
-        message("Performing base SOM training")
-        somWeights <- somTrain("base", somWeights, X, somTop$gridsize, algorithm, neighbFunc)
+        message("Performing SOM base training")
+        baseSom <- somTrain("base", initSom, X, somTop$gridsize, algorithm, neighbFunc)
         message("Done!")
+        # retrieve rough training error
+        somErr <- baseSom$qerr
+        message("SOM error after base training: ", somErr[length(somErr)])
         # SOM fine-tuning
         message("Performing SOM fine tuning")
-        somWeights <- somTrain("tune", somWeights, X, somTop$gridsize, algorithm, neighbFunc)
+        # finetuning error vector
+        finalSom <- somTrain("tune", baseSom$model, X, somTop$gridsize, algorithm, neighbFunc)
         message("Done!")
-        return(somWeights)
+        tuneErr <- finalSom$qerr
+        message("SOM error after fine tuning: ", tuneErr[length(tuneErr)])
+        somErr  <- c(somErr, tuneErr)
+        return(list("model"=finalSom$model, "qerr"=somErr))
 }
 
 # somTopology create SOM topology based on the specified parameters
@@ -70,7 +77,6 @@ somTopology <- function(X, mapUnits = NA, gridSize = NULL,
                 # mapUnits override gridSize parameter
                 gridSize <- getGridSize(X, mapUnits)
                 # mapUnits are reset to reflect the gridSize
-                # TODO: can we avoid doing this? Check getGridSize()
                 mapUnits <- prod(gridSize)
         }
         # return SOM topology parameters
@@ -79,6 +85,7 @@ somTopology <- function(X, mapUnits = NA, gridSize = NULL,
 
 # getGridSize calculates SOM grid size and returns it as a vector.
 # getGridSize determines the grid size from eigenvectors of input data
+# The size of grid is driven by the ratio of two highest input eigenvalues
 # It accepts following parameters:
 # X        - data matrix X
 # mapUnits - number of desired mapUnits. Default: NA
@@ -184,39 +191,49 @@ somTrain <- function(trainingType = "base", somWeights, X, gridSize,
 }
 
 # seqTrain - implements sequential SOM training
+# seqTrain returns somWeights and a vector of vector quant error - error per iteration
 seqTrain <- function(somWeights, X, gridSize, trainLen, alphaInit, radiusInit, neighbFunc) {
-        # calculat map unit distances - first calculate coordinates
+        # calculate map unit distances
+        # first we need to calculate map units coordinates on map grid
         mapUnitCoord <- getUnitCoords(gridSize)
         mapUnitDists <- getUnitDistances(mapUnitCoord)
         dataLen <- nrow(X)
         message("Kicking off ", trainLen, " training iterations")
+        # initialize quant Error
+        qErr <- c()
         # perform the actual SOM training
         for (i in 1:trainLen){
                 # pick a sample vector from input data
                 xIn <- X[sample(dataLen,1),]
                 # replicate xIn so we can use it in Matrix operations
-                tmpX <- matrix(rep(xIn), nrow=nrow(somWeights), ncol=ncol(somWeights), byrow=TRUE)
-                # same as xIn - somWeights
-                #deltaX <- sweep(-somWeights, 2, xIn, "+")
+                tmpX <- matrix(rep(xIn), nrow=nrow(somWeights),
+                               ncol=ncol(somWeights), byrow=TRUE)
                 # calculate distances from all weights - vectors are in rows
                 deltaX <- tmpX - somWeights
                 distX  <- rowSums(deltaX^2)
                 # find the BMU - the one with minimum distance
-                # we will pick the first one in case more BMUs are found
-                # TODO: pick random winner
-                bmu <- which.min(distX)[1]
+                # we will pick random BMU in case more BMUs are found
+                bmus <- which.min(distX)
+                bmu  <- bmus[sample(length(bmus), 1)]
                 # calculate learning rate, radius and neighbourhood
                 a <- alpha(alphaInit = alphaInit, trainLen, i)
                 r <- radius(radiusInit = radiusInit, trainLen, i)
                 # calculate neighborhood update
                 n <- neighbFunc(mapUnitDists, bmu, r)
-                tmpN <- matrix(rep(n), nrow=nrow(somWeights), ncol=ncol(somWeights), byrow=FALSE)
-                # same as a*tmpN*deltaX
-                # a*sweep(deltaX, 1, tmpN, "*")
+                # replicate the neighbourhood to matrix rows for matrix operation
+                tmpN <- matrix(rep(n), nrow=nrow(somWeights),
+                               ncol=ncol(somWeights), byrow=FALSE)
                 # update the SOM weights
                 somWeights <- somWeights + a*tmpN*deltaX
+                # calculate the cost - error metric is Euclidean distance from BMU
+                qErrs <- apply(X, 1, function(x){
+                        errs <- rowSums((sweep(somWeights, 2, x, "-"))^2)
+                        bmus <- which.min(errs)
+                        bmu  <- bmus[sample(length(bmus), 1)]
+                        errs[bmu]})
+                qErr[i] <- mean(qErrs)
         }
-        return(somWeights)
+        list("model" = somWeights, "qerr" = qErr)
 }
 
 # getNeighbFunc - returns neighbourhood function based on passed parameter
@@ -227,6 +244,7 @@ getNeighbFunc <- function(funcType){
 
 # gaussFunc - implements gausian function for SOM learning
 gaussFunc <- function(distMap, bmu, radius){
+        # distMap is symmetrical so distMap[,bmu] and distMap[bmu,] selects the same vector
         exp(-(distMap[,bmu]^2)/(2*radius*radius))
 }
 
@@ -246,7 +264,7 @@ getTrainParams <- function(trainingType, X, gridSize){
 baseParams <- function(X, gridSize){
         # set the trainLen - short for base training
         mapUnits <- prod(gridSize)
-        unitsPerData <- mapUnits/nrow(X)
+        unitsPerData <- ceiling(mapUnits/nrow(X))
         # must be at least 1 training
         trainLen <- max(1, 200*unitsPerData)
         # set the initial learning rate
@@ -263,7 +281,7 @@ baseParams <- function(X, gridSize){
 tuneParams <- function(X, gridSize){
         # set the trainLen - longer for fine-tune training
         mapUnits <- prod(gridSize)
-        unitsPerData <- mapUnits/nrow(X)
+        unitsPerData <- ceiling(mapUnits/nrow(X))
         # must be at least 1 training
         trainLen <- max(1, 400*unitsPerData)
         # set the initial learning rate - 10x smaller than initial training
