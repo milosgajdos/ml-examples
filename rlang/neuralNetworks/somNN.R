@@ -29,7 +29,9 @@ somNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, somInitTyp
         message("Calculating SOM topology")
         somTop <- somTopology(X, mapUnits, gridSize, lattice, shape)
         message("Done!")
-        # init map weights
+        message("SOM units: ", somTop$munits)
+        message("SOM dims: ", paste(somTop$gridsize, sep=" x ", collapse=" x "))
+        # initialize SOM weights
         message("Initializing SOM using ", somInitType, "init type")
         initSom <- somInit(X, somTop$munits, somInitType)
         message("Done!")
@@ -38,17 +40,18 @@ somNN <- function(trainDataPath, dataType = "csv", normalize = FALSE, somInitTyp
         baseSom <- somTrain("base", initSom, X, somTop$gridsize, algorithm, neighbFunc)
         message("Done!")
         # retrieve rough training error
-        somErr <- baseSom$qerr
-        message("SOM error after base training: ", somErr[length(somErr)])
+        baseErr <- baseSom$qerr
+        message("SOM error after base training: ", baseErr[length(baseErr)])
         # SOM fine-tuning
         message("Performing SOM fine tuning")
         # finetuning error vector
-        finalSom <- somTrain("tune", baseSom$model, X, somTop$gridsize, algorithm, neighbFunc)
+        tunedSom <- somTrain("tune", baseSom$model, X, somTop$gridsize, algorithm, neighbFunc)
         message("Done!")
-        tuneErr <- finalSom$qerr
+        tuneErr <- tunedSom$qerr
         message("SOM error after fine tuning: ", tuneErr[length(tuneErr)])
-        somErr  <- c(somErr, tuneErr)
-        return(list("model"=finalSom$model, "qerr"=somErr))
+        somErr  <- c(baseErr, tuneErr)
+        # return learnt parameters and quant. error vector
+        return(list("model" = tunedSom$model, "qerr" = somErr))
 }
 
 # somTopology create SOM topology based on the specified parameters
@@ -68,14 +71,14 @@ somTopology <- function(X, mapUnits = NA, gridSize = NULL,
                         mapUnits <- prod(gridSize)
                 } else {
                         # calculate map grid from data matrix
-                        gridSize <- getGridSize(X)
+                        gridSize <- getGridSize(X, lattice = lattice)
                         # mapUnits cover area of gridSize
                         mapUnits <- prod(gridSize)
                 }
         } else {
                 # mapUnits are determined by the size of X
                 # mapUnits override gridSize parameter
-                gridSize <- getGridSize(X, mapUnits)
+                gridSize <- getGridSize(X, mapUnits, lattice)
                 # mapUnits are reset to reflect the gridSize
                 mapUnits <- prod(gridSize)
         }
@@ -106,8 +109,9 @@ getGridSize <- function(X, mapUnits = NA, lattice = "hexagon"){
                 gridSize <- c(1, ceiling(mapUnits))
         } else if (dataLen < 2) {
                 # not enough data to calculate eigenvectors
+                # we will use some heuristics: nr. of mapUnits = square area of SOM
                 xDim <- round(sqrt(mapUnits))
-                yDim <- round(mapUnits / xDim)
+                yDim <- round(mapUnits/xDim)
                 gridSize <- c(xDim, yDim)
         } else {
                 # initialize xDim/yDim ratio using principal components of the input
@@ -142,9 +146,9 @@ getGridSize <- function(X, mapUnits = NA, lattice = "hexagon"){
 }
 
 # somInit initializes SOM based on the passed parameters
-# it accepts following parameters:
+# It accepts following parameters:
 # X - training data
-# mapUnits - number of SOM map units
+# mapUnits    - number of SOM map units
 # somInitType - init type: random Default: random
 somInit <- function(X, mapUnits, somInitType = "random"){
         switch(somInitType,
@@ -153,7 +157,7 @@ somInit <- function(X, mapUnits, somInitType = "random"){
 }
 
 # randInit initializes SOM with random uniformly distributed values in
-# range [min(xi), max(xi)] where min,max are calculated for each data feature
+# range (min, max) where min,max are calculated for each data column
 # It returns som weights matrix with following dimensions: mapUnits x dataDim
 # It accepts the following parameters
 # X - training data
@@ -161,13 +165,15 @@ somInit <- function(X, mapUnits, somInitType = "random"){
 randInit <- function(X, mapUnits){
         # read in data dimension
         dataDim <- ncol(X)
-        # find max and min in eeach data column/feature
+        # find max and min values in each data column [feature]
         ma <- apply(X,2,max)
         mi <- apply(X,2,min)
         # initialize somWeights matrix
+        # set.seed for reproducible results
+        set.seed(48)
         somWeights <- matrix(runif(mapUnits*dataDim), mapUnits, dataDim)
-        for (i in dataDim) {
-                somWeights[i,] <- ((ma-mi) * somWeights[i,]) + mi
+        for (i in 1:dataDim) {
+                somWeights[,i] <- ((ma-mi) * somWeights[,i]) + mi
         }
         return(somWeights)
 }
@@ -294,7 +300,9 @@ tuneParams <- function(X, gridSize){
         list("trainlen" = trainLen, "alpha" = alphaInit, "radius" = radiusInit)
 }
 
-# alpha implements SOM learning rate. alpha decays with iteration i.e. monotonically decreases
+# alpha implements SOM learning rate. alpha "decays" with every iteration
+# The decay starts at alphaInit = 1 and decreases based on chosen alphaType.
+# alphaType can be either inverse or lin.
 # It accepts following parameters:
 # alphaInit - initial value of learning rate. Default: 0.5
 # trainLen  - training length
@@ -356,10 +364,11 @@ getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
         coordMap[,1] <- rep(seq(0, gridSize[1]-1), mapUnits/gridSize[1])
         # all other dimensions contain repeated sequence groups: 0,0,0 ... 1,1,1 ...
         for (i in 2:mapDim){
-                # how long should the groups be
+                # how long should the repetition groups be
                 reps <- mapUnits/gridSize[i]
                 coordMap[,i] <- rep(0:(gridSize[i]-1), each = reps)
         }
+        # TODO: why?
         # swap first two dimensions i.e. columns
         coordMap[ ,c(1,2)] <- coordMap[, c(2,1)]
         # if lattice is set to hexagon we need to offset x-coordinates of every other row
@@ -376,7 +385,7 @@ getUnitCoords <- function(gridSize, lattice = "hexagon", shape = "sheet"){
                 for (i in 1:nrSeqs){
                         # in case of 5x2 grid this will generate the following sequences:
                         # 2,4 and 6,8 - we need one sequence per each "model units y-dim row"
-                        xOffsetInd <- seq(2+(i-1)*gridSize[1], by = 2, len = mapUnits/gridSize[1])
+                        xOffsetInd <- seq(from = 2+(i-1)*gridSize[1], to = i*gridSize[1], by = 2)
                         xOffsetInd <- subset(xOffsetInd, xOffsetInd <= (i*(mapUnits/gridSize[2])))
                         # move x coordinates by 0.5
                         coordMap[xOffsetInd, 1] = coordMap[xOffsetInd, 1] + 0.5
