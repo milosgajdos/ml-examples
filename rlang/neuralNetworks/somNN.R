@@ -189,57 +189,68 @@ somTrain <- function(trainingType = "base", somWeights, X, gridSize,
                      algorithm = "seq", neighbFunc = "gaussian"){
         # get training parameters
         trainParams  <- getTrainParams(trainingType, X, gridSize)
+        radiusPar    <- list("init" = trainParams$radius[1],
+                             "fin"  = trainParams$radius[2])
         neighbFunc   <- getNeighbFunc(neighbFunc)
         switch(algorithm,
                "seq" = seqTrain(somWeights, X, gridSize,
                                 trainParams$trainlen, trainParams$alpha,
-                                trainParams$radius, neighbFunc))
+                                radiusPar, neighbFunc))
 }
 
 # seqTrain - implements sequential SOM training
 # seqTrain returns somWeights and a vector of vector quant error - error per iteration
-seqTrain <- function(somWeights, X, gridSize, trainLen, alphaInit, radiusInit, neighbFunc) {
+seqTrain <- function(somWeights, X, gridSize, trainLen, alphaInit, radiusPar, neighbFunc) {
         # calculate map unit distances
         # first we need to calculate map units coordinates on map grid
         mapUnitCoord <- getUnitCoords(gridSize)
         mapUnitDists <- getUnitDistances(mapUnitCoord)
         dataLen <- nrow(X)
         message("Kicking off ", trainLen, " training iterations")
-        # initialize quant Error
+        # initialize quant Error vector
         qErr <- c()
         # perform the actual SOM training
         for (i in 1:trainLen){
                 # pick a sample vector from input data
                 xIn <- X[sample(dataLen,1),]
-                # replicate xIn so we can use it in Matrix operations
-                tmpX <- matrix(rep(xIn), nrow=nrow(somWeights),
-                               ncol=ncol(somWeights), byrow=TRUE)
-                # calculate distances from all weights - vectors are in rows
-                deltaX <- tmpX - somWeights
-                distX  <- rowSums(deltaX^2)
-                # find the BMU - the one with minimum distance
-                # we will pick random BMU in case more BMUs are found
-                bmus <- which.min(distX)
-                bmu  <- bmus[sample(length(bmus), 1)]
+                # calculate the distance matrix
+                deltaX <- sweep(-somWeights, 2, xIn, "+")
+                distX  <- deltaX^2
+                # find the bmu
+                bmu <- which.min(rowSums(distX))
                 # calculate learning rate, radius and neighbourhood
                 a <- alpha(alphaInit = alphaInit, trainLen, i)
-                r <- radius(radiusInit = radiusInit, trainLen, i)
-                # calculate neighborhood update
+                r <- radius(radiusPar, trainLen, i)
                 n <- neighbFunc(mapUnitDists, bmu, r)
-                # replicate the neighbourhood to matrix rows for matrix operation
-                tmpN <- matrix(rep(n), nrow=nrow(somWeights),
-                               ncol=ncol(somWeights), byrow=FALSE)
-                # update the SOM weights
-                somWeights <- somWeights + a*tmpN*deltaX
-                # calculate the cost - error metric is Euclidean distance from BMU
-                qErrs <- apply(X, 1, function(x){
-                        errs <- rowSums((sweep(somWeights, 2, x, "-"))^2)
-                        bmus <- which.min(errs)
-                        bmu  <- bmus[sample(length(bmus), 1)]
-                        errs[bmu]})
-                qErr[i] <- mean(qErrs)
+                # update the SOM weights - vector n is multiplying each column of deltaX
+                somWeights <- somWeights + a*sweep(deltaX, 1, n, "*")
+                # calcuate quantization error
+                qErr[i] <- mapErr(X, somWeights)
         }
         list("model" = somWeights, "qerr" = qErr)
+}
+
+# findBmu finds BMU for the input in SOM weights matrix. It will return an index and an error.
+# It accepts the following parameters:
+# input   - vectr of data
+# weights - SOM weights matrix
+findBmu <- function(input, weights){
+        # matrix of euclidean distances:
+        # (input-weights)^2 <=> (weights-input)^2
+        distMx <- (sweep(weights, 2, input, "-"))^2
+        # find BMU - which.min() will pick the first one it finds
+        bmu <- which.min(rowSums(distMx))
+        # return BMU index and BMU error
+        list("bmu" = bmu, "err" = sum(distMx[bmu,]))
+}
+
+# mapErr calculates quant map error i.e. mean(||x - Mc||)
+# it accept the following parameters
+# X - input data matrix
+# somWeigths - SOM map unit weights
+mapErr <- function(X, somWeights){
+        # mean all input BMU errors
+        mean(apply(X, 1, function(x){findBmu(x, somWeights)$err}))
 }
 
 # getNeighbFunc - returns neighbourhood function based on passed parameter
@@ -250,8 +261,9 @@ getNeighbFunc <- function(funcType){
 
 # gaussFunc - implements gausian function for SOM learning
 gaussFunc <- function(distMap, bmu, radius){
-        # distMap is symmetrical so distMap[,bmu] and distMap[bmu,] selects the same vector
-        exp(-(distMap[,bmu]^2)/(2*radius*radius))
+        # distMap is symmetrical so distMap[,bmu] and distMap[bmu,] are the same
+        # this is basically exp(-(||x-bmu||/(2*r*r)))
+        exp(-(distMap[bmu,]^2)/(2*radius*radius))
 }
 
 # getTrainParms - calculates training parameters for the type of training
@@ -279,8 +291,11 @@ baseParams <- function(X, gridSize){
         # radius normally goes from radiusInit -> 1
         # pick the highest dimension
         ms <- max(gridSize)
-        radiusInit <- max(1,ceiling(ms/4))
-        list("trainlen" = trainLen, "alpha" = alphaInit, "radius" = radiusInit)
+        radiusInit <- max(1, ceiling(ms/2))
+        # in base training we don't want to be too strict
+        radiusFin  <- max(1, radiusInit/4)
+        list("trainlen" = trainLen, "alpha" = alphaInit,
+             "radius" = c(radiusInit, radiusFin))
 }
 
 # tuneParams implements SOM fine tuning
@@ -296,8 +311,11 @@ tuneParams <- function(X, gridSize){
         # radius normally goes from radiusInit -> 1; note smaller initial radius than in base train
         # pick the highest dimension
         ms <- max(gridSize)
-        radiusInit <- max(1,ceiling(ms/8))
-        list("trainlen" = trainLen, "alpha" = alphaInit, "radius" = radiusInit)
+        radiusInit <- max(1,ceiling(ms/4))
+        # BMU distance should be 1; potentially even lower: 0.5
+        radiusFin  <- 1
+        list("trainlen" = trainLen, "alpha" = alphaInit,
+             "radius" = c(radiusInit, radiusFin))
 }
 
 # alpha implements SOM learning rate. alpha "decays" with every iteration
@@ -311,23 +329,25 @@ tuneParams <- function(X, gridSize){
 alpha <- function(alphaInit = 0.5, trainLen, iter, alphaType = "inv") {
         if (alphaType == "inv") {
                 # Inverse: alphaInit -> alphaInit/100
-                alphaInit / (1 + 99*(iter-1)/(trainLen-1))
+                a <- alphaInit / (1 + 99*(iter-1)/(trainLen-1))
         } else if (alphaType == "lin") {
                 # Linear: alphaInit -> 0
-                alphaInit*(1-iter/trainLen)
+                a <- alphaInit*(1-iter/trainLen)
         } else {
                 stop("Learning rate function not supported: ", alphaType)
         }
+        return(a)
 }
 
 # radius implements unit neighbourhood radius function
 # radius is a monotonically decreasing function that depends on training length
-# radiusInit - initial value of neighb. radius.
+# radius     - list containing radiusInit and radiusFin
 # trainLen   - training length
 # iter       - iteration number
-radius <- function(radiusInit, trainLen, iter){
+radius <- function(radiusPar, trainLen, iter){
         # might become a configurable in the future
-        radiusFin <- 1
+        radiusInit <- radiusPar$init
+        radiusFin  <- radiusPar$fin
         # first returned value = radiusInit as iter=1 -> radiusInit + 0
         # last  returned value = radiusFin  as iter = trainLen -> radiusInit-radiusInit+radiusFin
         radiusInit + (radiusFin-radiusInit)*(iter-1)/(trainLen-1)
